@@ -49,7 +49,7 @@ class TestSimple(TestCase):
         self.assertEqual(s1.value.value, '0')
 
     def test_success_matrix(self) -> None:
-        resp: SuccessResponse[VectorData] = {
+        resp: SuccessResponse[MatrixData] = {
             "status": "success",
             "data": {
                 "resultType": "matrix",
