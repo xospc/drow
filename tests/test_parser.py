@@ -14,6 +14,7 @@ from drow.parser import (
     PrometheusError,
 )
 
+
 class TestSimple(TestCase):
     def test_success_vector(self) -> None:
         resp: SuccessResponse[VectorData] = {
@@ -41,12 +42,12 @@ class TestSimple(TestCase):
         self.assertEqual(len(parsed.series), 2)
 
         s0 = parsed.series[0]
-        self.assertEqual(s0.metric['job'], 'foo')
-        self.assertEqual(s0.value.value, '1')
+        self.assertEqual(s0.metric["job"], "foo")
+        self.assertEqual(s0.value.value, "1")
 
         s1 = parsed.series[1]
-        self.assertEqual(s1.metric['job'], 'bar')
-        self.assertEqual(s1.value.value, '0')
+        self.assertEqual(s1.metric["job"], "bar")
+        self.assertEqual(s1.value.value, "0")
 
     def test_success_matrix(self) -> None:
         resp: SuccessResponse[MatrixData] = {
@@ -82,16 +83,16 @@ class TestSimple(TestCase):
         self.assertEqual(len(parsed.series), 2)
 
         s0 = parsed.series[0]
-        self.assertEqual(s0.metric['job'], 'foo')
-        self.assertEqual(s0.values[0].value, '1')
-        self.assertEqual(s0.values[1].value, '2')
-        self.assertEqual(s0.values[2].value, '3')
+        self.assertEqual(s0.metric["job"], "foo")
+        self.assertEqual(s0.values[0].value, "1")
+        self.assertEqual(s0.values[1].value, "2")
+        self.assertEqual(s0.values[2].value, "3")
 
         s1 = parsed.series[1]
-        self.assertEqual(s1.metric['job'], 'bar')
-        self.assertEqual(s1.values[0].value, '2')
-        self.assertEqual(s1.values[1].value, '1')
-        self.assertEqual(s1.values[2].value, '0')
+        self.assertEqual(s1.metric["job"], "bar")
+        self.assertEqual(s1.values[0].value, "2")
+        self.assertEqual(s1.values[1].value, "1")
+        self.assertEqual(s1.values[2].value, "0")
 
     def test_success_scalar(self) -> None:
         resp: SuccessResponse[ScalarData] = {
@@ -100,7 +101,7 @@ class TestSimple(TestCase):
         }
         parsed = parse_query_response(resp)
         assert isinstance(parsed, ScalarPoint)
-        self.assertEqual(parsed.value, '5')
+        self.assertEqual(parsed.value, "5")
 
     def test_success_string(self) -> None:
         resp: SuccessResponse[StringData] = {
@@ -111,11 +112,11 @@ class TestSimple(TestCase):
         }
         parsed = parse_query_response(resp)
         assert isinstance(parsed, StringPoint)
-        self.assertEqual(parsed.value, 'foo')
+        self.assertEqual(parsed.value, "foo")
 
     def test_error(self) -> None:
         resp: ErrorResponse = {
-            "status": 'error',
+            "status": "error",
             "errorType": "422",
             "error": "error when executing query",
         }
