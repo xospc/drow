@@ -71,6 +71,7 @@ class ScalarData(TypedDict):
     resultType: Literal["scalar"]
     result: ScalarPointData
 
+
 class StringData(TypedDict):
     resultType: Literal["string"]
     result: StringPointData
