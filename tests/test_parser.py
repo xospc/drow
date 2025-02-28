@@ -131,7 +131,7 @@ class TestParser(TestCase):
             "status": "success",
             "data": {"resultType": "scalar", "result": (1739529069.829, "5")},
         }
-        self.assertEqual(parse_query_value_response(resp), '5')
+        self.assertEqual(parse_query_value_response(resp), "5")
 
     def test_vector_value(self) -> None:
         resp: SuccessResponse[VectorData] = {
@@ -148,7 +148,7 @@ class TestParser(TestCase):
                 ],
             },
         }
-        self.assertEqual(parse_query_value_response(resp), '6')
+        self.assertEqual(parse_query_value_response(resp), "6")
 
     def test_too_many_series_when_parse_value(self) -> None:
         resp: SuccessResponse[VectorData] = {
