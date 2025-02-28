@@ -11,11 +11,13 @@ from drow.model import (
 from drow.parser import (
     parse_query_response,
     parse_query_range_response,
+    parse_query_value_response,
     PrometheusError,
+    ParseError,
 )
 
 
-class TestSimple(TestCase):
+class TestParser(TestCase):
     def test_success_vector(self) -> None:
         resp: SuccessResponse[VectorData] = {
             "status": "success",
@@ -123,3 +125,51 @@ class TestSimple(TestCase):
 
         with self.assertRaises(PrometheusError):
             parse_query_response(resp)
+
+    def test_scalar_value(self) -> None:
+        resp: SuccessResponse[ScalarData] = {
+            "status": "success",
+            "data": {"resultType": "scalar", "result": (1739529069.829, "5")},
+        }
+        self.assertEqual(parse_query_value_response(resp), "5")
+
+    def test_vector_value(self) -> None:
+        resp: SuccessResponse[VectorData] = {
+            "status": "success",
+            "data": {
+                "resultType": "vector",
+                "result": [
+                    {
+                        "metric": {
+                            "job": "foo",
+                        },
+                        "value": (1435781451.781, "6"),
+                    },
+                ],
+            },
+        }
+        self.assertEqual(parse_query_value_response(resp), "6")
+
+    def test_too_many_series_when_parse_value(self) -> None:
+        resp: SuccessResponse[VectorData] = {
+            "status": "success",
+            "data": {
+                "resultType": "vector",
+                "result": [
+                    {
+                        "metric": {
+                            "job": "foo",
+                        },
+                        "value": (1435781451.781, "1"),
+                    },
+                    {
+                        "metric": {
+                            "job": "bar",
+                        },
+                        "value": (1435781451.781, "0"),
+                    },
+                ],
+            },
+        }
+        with self.assertRaises(ParseError):
+            parse_query_value_response(resp)
