@@ -12,10 +12,10 @@ class RequestArg:
 def build_arg_for_query(
     base_url: str, metric: str, time: Optional[float] = None
 ) -> RequestArg:
-    url = urljoin(base_url, 'api/v1/query')
-    params = {'query': metric}
+    url = urljoin(base_url, "api/v1/query")
+    params = {"query": metric}
     if time:
-        params['time'] = str(time)
+        params["time"] = str(time)
 
     return RequestArg(url, params)
 
@@ -25,11 +25,11 @@ def build_arg_for_query_range(
     start: float, end: float,
     step: Optional[float] = None, step_count: int = 60,
 ) -> RequestArg:
-    url = urljoin(base_url, 'api/v1/query_range')
+    url = urljoin(base_url, "api/v1/query_range")
 
     if step is None:
         if start >= end:
-            raise ValueError('end must be greater than start')
+            raise ValueError("end must be greater than start")
 
         step = (end - start) / step_count
         if step < 1:
@@ -38,9 +38,9 @@ def build_arg_for_query_range(
             step = int(step)
 
     params: dict[str, str] = {
-        'query': metric,
-        'start': str(start),
-        'end': str(end),
-        'step': str(step),
+        "query": metric,
+        "start": str(start),
+        "end": str(end),
+        "step": str(step),
     }
     return RequestArg(url, params)
