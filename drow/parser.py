@@ -12,6 +12,21 @@ from .model import (
 )
 
 
+QueryResponse = Union[
+    SuccessResponse[ScalarData],
+    SuccessResponse[StringData],
+    SuccessResponse[VectorData],
+    ErrorResponse,
+]
+QueryResult = Union[
+    ScalarPoint, StringPoint, InstantVector,
+]
+QueryRangeResponse = Union[
+    SuccessResponse[MatrixData],
+    ErrorResponse,
+]
+QueryRangeResult = Matrix
+
 class PrometheusError(Exception):
     pass
 
@@ -20,14 +35,7 @@ class ParseError(Exception):
     pass
 
 
-def parse_query_response(
-    resp: Union[
-        SuccessResponse[ScalarData],
-        SuccessResponse[StringData],
-        SuccessResponse[VectorData],
-        ErrorResponse,
-    ],
-) -> Union[ScalarPoint, StringPoint, InstantVector]:
+def parse_query_response(resp: QueryResponse) -> QueryResult:
     if resp["status"] == "error":
         parse_error(resp)
 
@@ -70,12 +78,7 @@ def parse_range_series(data: ScalarRangeVector) -> RangeSeries:
     )
 
 
-def parse_query_range_response(
-    resp: Union[
-        SuccessResponse[MatrixData],
-        ErrorResponse,
-    ],
-) -> Matrix:
+def parse_query_range_response(resp: QueryRangeResponse) -> QueryRangeResult:
     if resp["status"] == "error":
         parse_error(resp)
 
@@ -107,3 +110,27 @@ def parse_scalar(data: ScalarData) -> ScalarPoint:
 
 def parse_string(data: StringData) -> StringPoint:
     return StringPoint(*data["result"])
+
+
+def parse_query_value_response(resp: QueryResponse) -> str:
+    if resp["status"] == "error":
+        parse_error(resp)
+
+    assert resp["status"] == "success", resp
+
+    data = resp["data"]
+
+    if data["resultType"] == "string":
+        return data["result"][1]
+
+    if data["resultType"] == "scalar":
+        return data["result"][1]
+
+    if data["resultType"] == "vector":
+        series_count = len(data['result'])
+        if series_count != 1:
+            raise ParseError(f'series count incorrect: {series_count}')
+
+        return data['result'][0]['value'][1]
+
+    raise ParseError(f'unknown result type: {data["resultType"]}')
