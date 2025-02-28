@@ -27,6 +27,7 @@ QueryRangeResponse = Union[
 ]
 QueryRangeResult = Matrix
 
+
 class PrometheusError(Exception):
     pass
 
@@ -127,10 +128,10 @@ def parse_query_value_response(resp: QueryResponse) -> str:
         return data["result"][1]
 
     if data["resultType"] == "vector":
-        series_count = len(data['result'])
+        series_count = len(data["result"])
         if series_count != 1:
-            raise ParseError(f'series count incorrect: {series_count}')
+            raise ParseError(f"series count incorrect: {series_count}")
 
-        return data['result'][0]['value'][1]
+        return data["result"][0]["value"][1]
 
     raise ParseError(f'unknown result type: {data["resultType"]}')
