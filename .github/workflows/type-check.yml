@@ -19,4 +19,12 @@ jobs:
         python -m pip install mypy
     - name: Run type check
       run: |
-        mypy --strict .
+        python -m mypy \
+          --strict \
+          --disallow-any-unimported \
+          --disallow-any-expr \
+          --disallow-any-decorated \
+          --disallow-any-explicit \
+          --disallow-any-generics \
+          --disallow-subclassing-any \
+          .
