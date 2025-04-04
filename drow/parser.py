@@ -1,8 +1,10 @@
-from typing import Union
+from typing import Union, TypeVar
+from collections.abc import Callable
 
 from .annotation import (
     SuccessResponse, ErrorResponse,
     ScalarInstantVector, ScalarRangeVector,
+    ScalarPointData,
     VectorData, MatrixData, ScalarData, StringData,
 )
 from .model import (
@@ -10,7 +12,12 @@ from .model import (
     InstantSeries, RangeSeries,
     InstantVector, Matrix,
 )
+from .converter import Converter
 
+T = TypeVar("T")
+ValueType = TypeVar("ValueType")
+ResponseType = TypeVar("ResponseType")
+ResultType = TypeVar("ResultType")
 
 QueryResponse = Union[
     SuccessResponse[ScalarData],
@@ -18,8 +25,8 @@ QueryResponse = Union[
     SuccessResponse[VectorData],
     ErrorResponse,
 ]
-QueryResult = Union[
-    ScalarPoint, StringPoint, InstantVector,
+type QueryResult[T] = Union[
+    ScalarPoint[T], StringPoint, InstantVector[T],
 ]
 QueryRangeResponse = Union[
     SuccessResponse[MatrixData],
@@ -36,7 +43,10 @@ class ParseError(Exception):
     pass
 
 
-def parse_query_response(resp: QueryResponse) -> QueryResult:
+def generic_parse_query_response(
+    resp: QueryResponse,
+    value_converter: Converter[T],
+) -> QueryResult[T]:
     if resp["status"] == "error":
         parse_error(resp)
 
@@ -48,10 +58,10 @@ def parse_query_response(resp: QueryResponse) -> QueryResult:
         return parse_string(data)
 
     if data["resultType"] == "scalar":
-        return parse_scalar(data)
+        return parse_scalar(data, value_converter=value_converter)
 
     if data["resultType"] == "vector":
-        return parse_vector(data)
+        return parse_vector(data, value_converter=value_converter)
 
     raise ParseError(f'unknown result type: {data["resultType"]}')
 
@@ -62,24 +72,37 @@ def parse_error(resp: ErrorResponse) -> None:
     )
 
 
-def parse_instant_series(data: ScalarInstantVector) -> InstantSeries:
+def parse_instant_series(
+    data: ScalarInstantVector,
+    value_converter: Converter[T],
+) -> InstantSeries[T]:
     return InstantSeries(
         metric=data["metric"],
-        value=ScalarPoint(*data["value"])
+        # value=ScalarPoint(*data["value"])
+        value=parse_scalar_point(
+            data["value"], value_converter=value_converter,
+        ),
     )
 
 
-def parse_range_series(data: ScalarRangeVector) -> RangeSeries:
+def parse_range_series(
+    data: ScalarRangeVector,
+    value_converter: Converter[T]
+) -> RangeSeries[T]:
     return RangeSeries(
         metric=data["metric"],
         values=[
-            ScalarPoint(*i)
+            # ScalarPoint(*i)
+            parse_scalar_point(i, value_converter=value_converter)
             for i in data["values"]
         ]
     )
 
 
-def parse_query_range_response(resp: QueryRangeResponse) -> QueryRangeResult:
+def generic_parse_query_range_response(
+    resp: QueryRangeResponse,
+    value_converter: Converter[T],
+) -> QueryRangeResult[T]:
     if resp["status"] == "error":
         parse_error(resp)
 
@@ -88,32 +111,48 @@ def parse_query_range_response(resp: QueryRangeResponse) -> QueryRangeResult:
     data = resp["data"]
     assert data["resultType"] == "matrix", resp
 
-    return parse_matrix(data)
+    return parse_matrix(data, value_converter=value_converter)
 
 
-def parse_vector(data: VectorData) -> InstantVector:
+def parse_vector(
+    data: VectorData,
+    value_converter: Converter[T],
+) -> InstantVector[T]:
     return InstantVector(series=[
-        parse_instant_series(i)
+        parse_instant_series(i, value_converter=value_converter)
         for i in data["result"]
     ])
 
 
-def parse_matrix(data: MatrixData) -> Matrix:
+def parse_matrix(data: MatrixData, value_converter: Converter[T]) -> Matrix[T]:
     return Matrix(series=[
-        parse_range_series(i)
+        parse_range_series(i, value_converter=value_converter)
         for i in data["result"]
     ])
 
 
-def parse_scalar(data: ScalarData) -> ScalarPoint:
-    return ScalarPoint(*data["result"])
+def parse_scalar(
+    data: ScalarData, value_converter: Converter[T],
+) -> ScalarPoint[T]:
+    return parse_scalar_point(data["result"], value_converter)
+
+
+def parse_scalar_point(
+    data: ScalarPointData,
+    value_converter: Converter[T],
+) -> ScalarPoint[T]:
+    t, v = data
+    return ScalarPoint(t, value_converter(v))
 
 
 def parse_string(data: StringData) -> StringPoint:
     return StringPoint(*data["result"])
 
 
-def parse_query_value_response(resp: QueryResponse) -> str:
+def generic_parse_query_value_response(
+    resp: QueryResponse,
+    value_converter: Converter[T],
+) -> T:
     if resp["status"] == "error":
         parse_error(resp)
 
@@ -122,16 +161,29 @@ def parse_query_value_response(resp: QueryResponse) -> str:
     data = resp["data"]
 
     if data["resultType"] == "string":
-        return data["result"][1]
+        return value_converter(data["result"][1])
 
     if data["resultType"] == "scalar":
-        return data["result"][1]
+        return value_converter(data["result"][1])
 
     if data["resultType"] == "vector":
         series_count = len(data["result"])
         if series_count != 1:
             raise ParseError(f"series count incorrect: {series_count}")
 
-        return data["result"][0]["value"][1]
+        return value_converter(data["result"][0]["value"][1])
 
     raise ParseError(f'unknown result type: {data["resultType"]}')
+
+
+def make_parser(
+    origin_parser: Callable[
+        [ResponseType, Converter[ValueType]],
+        ResultType
+    ],
+    value_converter: Converter[ValueType],
+) -> Callable[[ResponseType], ResultType]:
+    def parser(resp: ResponseType) -> ResultType:
+        return origin_parser(resp, value_converter)
+
+    return parser

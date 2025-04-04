@@ -9,11 +9,23 @@ from drow.model import (
     InstantVector, Matrix,
 )
 from drow.parser import (
-    parse_query_response,
-    parse_query_range_response,
-    parse_query_value_response,
+    generic_parse_query_response,
+    generic_parse_query_range_response,
+    generic_parse_query_value_response,
     PrometheusError,
     ParseError,
+    make_parser,
+)
+from drow.converter import no_op
+
+parse_query_response = make_parser(
+    generic_parse_query_response, no_op
+)
+parse_query_range_response = make_parser(
+    generic_parse_query_range_response, no_op
+)
+parse_query_value_response = make_parser(
+    generic_parse_query_value_response, no_op
 )
 
 
