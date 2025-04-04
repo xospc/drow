@@ -27,4 +27,5 @@ jobs:
           --disallow-any-explicit \
           --disallow-any-generics \
           --disallow-subclassing-any \
+          --enable-error-code deprecated \
           .
