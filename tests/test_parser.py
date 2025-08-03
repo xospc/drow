@@ -9,24 +9,13 @@ from drow.model import (
     InstantVector, Matrix,
 )
 from drow.parser import (
-    generic_parse_query_response,
-    generic_parse_query_range_response,
-    generic_parse_query_value_response,
     PrometheusError,
     ParseError,
     make_parser,
 )
 from drow.converter import no_op
 
-parse_query_response = make_parser(
-    generic_parse_query_response, no_op
-)
-parse_query_range_response = make_parser(
-    generic_parse_query_range_response, no_op
-)
-parse_query_value_response = make_parser(
-    generic_parse_query_value_response, no_op
-)
+parser = make_parser(no_op)
 
 
 class TestParser(TestCase):
@@ -51,7 +40,7 @@ class TestParser(TestCase):
                 ],
             },
         }
-        parsed = parse_query_response(resp)
+        parsed = parser.parse_query_response(resp)
         assert isinstance(parsed, InstantVector)
         self.assertEqual(len(parsed.series), 2)
 
@@ -92,7 +81,7 @@ class TestParser(TestCase):
                 ],
             },
         }
-        parsed = parse_query_range_response(resp)
+        parsed = parser.parse_query_range_response(resp)
         assert isinstance(parsed, Matrix)
         self.assertEqual(len(parsed.series), 2)
 
@@ -113,7 +102,7 @@ class TestParser(TestCase):
             "status": "success",
             "data": {"resultType": "scalar", "result": (1739529069.829, "5")},
         }
-        parsed = parse_query_response(resp)
+        parsed = parser.parse_query_response(resp)
         assert isinstance(parsed, ScalarPoint)
         self.assertEqual(parsed.value, "5")
 
@@ -124,7 +113,7 @@ class TestParser(TestCase):
                 "resultType": "string", "result": (1739529105.401, "foo")
             },
         }
-        parsed = parse_query_response(resp)
+        parsed = parser.parse_query_response(resp)
         assert isinstance(parsed, StringPoint)
         self.assertEqual(parsed.value, "foo")
 
@@ -136,14 +125,14 @@ class TestParser(TestCase):
         }
 
         with self.assertRaises(PrometheusError):
-            parse_query_response(resp)
+            parser.parse_query_response(resp)
 
     def test_scalar_value(self) -> None:
         resp: SuccessResponse[ScalarData] = {
             "status": "success",
             "data": {"resultType": "scalar", "result": (1739529069.829, "5")},
         }
-        self.assertEqual(parse_query_value_response(resp), "5")
+        self.assertEqual(parser.parse_query_value_response(resp), "5")
 
     def test_vector_value(self) -> None:
         resp: SuccessResponse[VectorData] = {
@@ -160,7 +149,7 @@ class TestParser(TestCase):
                 ],
             },
         }
-        self.assertEqual(parse_query_value_response(resp), "6")
+        self.assertEqual(parser.parse_query_value_response(resp), "6")
 
     def test_too_many_series_when_parse_value(self) -> None:
         resp: SuccessResponse[VectorData] = {
@@ -184,4 +173,4 @@ class TestParser(TestCase):
             },
         }
         with self.assertRaises(ParseError):
-            parse_query_value_response(resp)
+            parser.parse_query_value_response(resp)
