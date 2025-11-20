@@ -1,0 +1,5 @@
+exclude .flake8
+exclude MANIFEST.in
+
+prune .github
+prune tests
