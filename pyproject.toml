@@ -12,7 +12,8 @@ classifiers = [
   "Programming Language :: Python :: 3",
 ]
 
-requires-python = ">=3.10"
+# typing.NotRequired is added in Python 3.11.
+requires-python = ">=3.11"
 
 readme = "README.md"
 
