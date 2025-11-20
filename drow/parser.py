@@ -1,4 +1,4 @@
-from typing import Union, TypeVar, Generic
+from typing import Union, TypeVar, Generic, TypeAlias
 
 from .annotation import (
     SuccessResponse, ErrorResponse,
@@ -24,7 +24,7 @@ QueryResponse = Union[
     SuccessResponse[VectorData],
     ErrorResponse,
 ]
-type QueryResult[T] = Union[
+QueryResult[T]: TypeAlias = Union[
     ScalarPoint[T], StringPoint, InstantVector[T],
 ]
 QueryRangeResponse = Union[
