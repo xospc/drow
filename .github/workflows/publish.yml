@@ -24,6 +24,8 @@ jobs:
       - name: dump result
         run: |
           ls -alh dist/
+          find dist -name *.whl -print -exec unzip -l {} \;
+          find dist -name *.tar.gz -print -exec tar zf {} \;
       - uses: actions/upload-artifact@v4
         with:
           name: dist
