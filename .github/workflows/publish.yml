@@ -25,7 +25,7 @@ jobs:
         run: |
           ls -alh dist/
           find dist -name *.whl -print -exec unzip -l {} \;
-          find dist -name *.tar.gz -print -exec tar zf {} \;
+          find dist -name *.tar.gz -print -exec tar -ztvf {} \;
       - uses: actions/upload-artifact@v4
         with:
           name: dist
