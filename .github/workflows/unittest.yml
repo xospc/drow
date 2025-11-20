@@ -9,10 +9,19 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        pyver: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python
       uses: actions/setup-python@v3
-    - name: run unittest
+      with:
+        python-version: ${{ matrix.pyver }}
+    - name: Install
       run: |
-        python -m unittest discover tests
+        python -m pip install coverage
+    - name: Run unittest
+      run: |
+        coverage run -m unittest discover tests
+        coverage report
