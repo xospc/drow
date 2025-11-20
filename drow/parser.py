@@ -24,7 +24,7 @@ QueryResponse = Union[
     SuccessResponse[VectorData],
     ErrorResponse,
 ]
-QueryResult[T]: TypeAlias = Union[
+QueryResult: TypeAlias = Union[
     ScalarPoint[T], StringPoint, InstantVector[T],
 ]
 QueryRangeResponse = Union[
