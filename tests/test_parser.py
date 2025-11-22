@@ -117,6 +117,9 @@ class TestParser(TestCase):
         assert isinstance(parsed, Point)
         self.assertEqual(parsed.value, "foo")
 
+        with self.assertRaises(ParseError):
+            parser.parse_query_response_as_value(resp)
+
     def test_error(self) -> None:
         resp: ErrorResponse = {
             "status": "error",
@@ -127,12 +130,24 @@ class TestParser(TestCase):
         with self.assertRaises(PrometheusError):
             parser.parse_query_response(resp)
 
+        with self.assertRaises(PrometheusError):
+            parser.parse_query_response_as_value(resp)
+
+        with self.assertRaises(PrometheusError):
+            parser.parse_query_response_as_vector(resp)
+
+        with self.assertRaises(PrometheusError):
+            parser.parse_query_range_response(resp)
+
     def test_scalar_value(self) -> None:
         resp: SuccessResponse[ScalarData] = {
             "status": "success",
             "data": {"resultType": "scalar", "result": (1739529069.829, "5")},
         }
-        self.assertEqual(parser.parse_query_value_response(resp), "5")
+        self.assertEqual(parser.parse_query_response_as_value(resp), "5")
+
+        with self.assertRaises(ParseError):
+            parser.parse_query_response_as_vector(resp)
 
     def test_vector_value(self) -> None:
         resp: SuccessResponse[VectorData] = {
@@ -149,9 +164,9 @@ class TestParser(TestCase):
                 ],
             },
         }
-        self.assertEqual(parser.parse_query_value_response(resp), "6")
+        self.assertEqual(parser.parse_query_response_as_value(resp), "6")
 
-    def test_too_many_series_when_parse_value(self) -> None:
+    def test_vector_with_more_series(self) -> None:
         resp: SuccessResponse[VectorData] = {
             "status": "success",
             "data": {
@@ -173,4 +188,15 @@ class TestParser(TestCase):
             },
         }
         with self.assertRaises(ParseError):
-            parser.parse_query_value_response(resp)
+            parser.parse_query_response_as_value(resp)
+
+        vector = parser.parse_query_response_as_vector(resp)
+        self.assertEqual(len(vector.series), 2)
+
+        s0 = vector.series[0]
+        self.assertEqual(s0.metric["job"], "foo")
+        self.assertEqual(s0.value.value, "1")
+
+        s1 = vector.series[1]
+        self.assertEqual(s1.metric["job"], "bar")
+        self.assertEqual(s1.value.value, "0")

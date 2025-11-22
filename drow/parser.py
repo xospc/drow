@@ -51,6 +51,7 @@ class BaseParser(Generic[T]):
             self.parse_error(resp)
 
         data = resp["data"]
+        result_type = data["resultType"]
 
         if data["resultType"] == "string":
             return self.parse_string(data)
@@ -61,7 +62,21 @@ class BaseParser(Generic[T]):
         if data["resultType"] == "vector":
             return self.parse_vector(data)
 
-        raise ParseError(f'unknown result type: {data["resultType"]}')
+        raise ParseError(f"unknown result type: {result_type}")
+
+    def parse_query_response_as_vector(
+        self, resp: QueryResponse,
+    ) -> InstantVector[T]:
+        if resp["status"] == "error":
+            self.parse_error(resp)
+
+        data = resp["data"]
+        result_type = data["resultType"]
+
+        if data["resultType"] == "vector":
+            return self.parse_vector(data)
+
+        raise ParseError(f"cannot parse {result_type} as vector")
 
     def parse_error(self, resp: ErrorResponse) -> Never:
         raise PrometheusError(
@@ -111,26 +126,30 @@ class BaseParser(Generic[T]):
     def parse_string(self, data: StringData) -> Point[str]:
         return Point(*data["result"])
 
-    def parse_query_value_response(self, resp: QueryResponse) -> T:
+    def parse_query_response_as_value_point(
+        self, resp: QueryResponse,
+    ) -> Point[T]:
         if resp["status"] == "error":
             self.parse_error(resp)
 
         data = resp["data"]
-
-        if data["resultType"] == "string":
-            return self.parse_value(data["result"][1])
+        result_type = data["resultType"]
 
         if data["resultType"] == "scalar":
-            return self.parse_value(data["result"][1])
+            return self.parse_scalar_point(data["result"])
 
         if data["resultType"] == "vector":
             series_count = len(data["result"])
             if series_count != 1:
                 raise ParseError(f"series count incorrect: {series_count}")
 
-            return self.parse_value(data["result"][0]["value"][1])
+            return self.parse_scalar_point(data["result"][0]["value"])
 
-        raise ParseError(f'unknown result type: {data["resultType"]}')
+        raise ParseError(f"cannot parse {result_type} as value")
+
+    def parse_query_response_as_value(self, resp: QueryResponse) -> T:
+        pt = self.parse_query_response_as_value_point(resp)
+        return pt.value
 
 
 def make_parser(
