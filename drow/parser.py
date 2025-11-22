@@ -1,4 +1,4 @@
-from typing import Union, TypeVar, Generic, TypeAlias
+from typing import Union, TypeVar, Generic, TypeAlias, Never
 
 from .annotation import (
     SuccessResponse, ErrorResponse,
@@ -50,8 +50,6 @@ class BaseParser(Generic[T]):
         if resp["status"] == "error":
             self.parse_error(resp)
 
-        assert resp["status"] == "success", resp
-
         data = resp["data"]
 
         if data["resultType"] == "string":
@@ -65,7 +63,7 @@ class BaseParser(Generic[T]):
 
         raise ParseError(f'unknown result type: {data["resultType"]}')
 
-    def parse_error(self, resp: ErrorResponse) -> None:
+    def parse_error(self, resp: ErrorResponse) -> Never:
         raise PrometheusError(
             f'error {resp["errorType"]}: {resp["error"]}'
         )
@@ -90,11 +88,7 @@ class BaseParser(Generic[T]):
         if resp["status"] == "error":
             self.parse_error(resp)
 
-        assert resp["status"] == "success", resp
-
         data = resp["data"]
-        assert data["resultType"] == "matrix", resp
-
         return self.parse_matrix(data)
 
     def parse_vector(self, data: VectorData) -> InstantVector[T]:
@@ -120,8 +114,6 @@ class BaseParser(Generic[T]):
     def parse_query_value_response(self, resp: QueryResponse) -> T:
         if resp["status"] == "error":
             self.parse_error(resp)
-
-        assert resp["status"] == "success", resp
 
         data = resp["data"]
 
