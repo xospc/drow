@@ -3,11 +3,11 @@ from typing import Union, TypeVar, Generic, TypeAlias
 from .annotation import (
     SuccessResponse, ErrorResponse,
     ScalarInstantVector, ScalarRangeVector,
-    ScalarPointData,
+    PointData,
     VectorData, MatrixData, ScalarData, StringData,
 )
 from .model import (
-    ScalarPoint, StringPoint,
+    Point,
     InstantSeries, RangeSeries,
     InstantVector, Matrix,
 )
@@ -25,7 +25,7 @@ QueryResponse = Union[
     ErrorResponse,
 ]
 QueryResult: TypeAlias = Union[
-    ScalarPoint[T], StringPoint, InstantVector[T],
+    Point[T], Point[str], InstantVector[T],
 ]
 QueryRangeResponse = Union[
     SuccessResponse[MatrixData],
@@ -107,15 +107,15 @@ class BaseParser(Generic[T]):
             self.parse_range_series(i) for i in data["result"]
         ])
 
-    def parse_scalar(self, data: ScalarData) -> ScalarPoint[T]:
+    def parse_scalar(self, data: ScalarData) -> Point[T]:
         return self.parse_scalar_point(data["result"])
 
-    def parse_scalar_point(self, data: ScalarPointData) -> ScalarPoint[T]:
+    def parse_scalar_point(self, data: PointData[str]) -> Point[T]:
         t, v = data
-        return ScalarPoint(t, self.parse_value(v))
+        return Point(t, self.parse_value(v))
 
-    def parse_string(self, data: StringData) -> StringPoint:
-        return StringPoint(*data["result"])
+    def parse_string(self, data: StringData) -> Point[str]:
+        return Point(*data["result"])
 
     def parse_query_value_response(self, resp: QueryResponse) -> T:
         if resp["status"] == "error":
