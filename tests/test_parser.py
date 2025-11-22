@@ -5,7 +5,7 @@ from drow.annotation import (
     VectorData, MatrixData, ScalarData, StringData,
 )
 from drow.model import (
-    ScalarPoint, StringPoint,
+    Point,
     InstantVector, Matrix,
 )
 from drow.parser import (
@@ -103,7 +103,7 @@ class TestParser(TestCase):
             "data": {"resultType": "scalar", "result": (1739529069.829, "5")},
         }
         parsed = parser.parse_query_response(resp)
-        assert isinstance(parsed, ScalarPoint)
+        assert isinstance(parsed, Point)
         self.assertEqual(parsed.value, "5")
 
     def test_success_string(self) -> None:
@@ -114,7 +114,7 @@ class TestParser(TestCase):
             },
         }
         parsed = parser.parse_query_response(resp)
-        assert isinstance(parsed, StringPoint)
+        assert isinstance(parsed, Point)
         self.assertEqual(parsed.value, "foo")
 
     def test_error(self) -> None:

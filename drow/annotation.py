@@ -1,6 +1,7 @@
-from typing import TypeVar, TypedDict, NotRequired, Generic, Literal
+from typing import TypeVar, TypedDict, NotRequired, Generic, Literal, TypeAlias
 
 DataType = TypeVar("DataType")
+PointData: TypeAlias = tuple[float, DataType]
 
 
 class BaseResponse(TypedDict):
@@ -32,29 +33,24 @@ class HistogramValue(TypedDict):
     buckets: list[BucketValue]
 
 
-ScalarPointData = tuple[float, str]
-StringPointData = tuple[float, str]
-HistogramPointData = tuple[float, HistogramValue]
-
-
 class BaseVector(TypedDict):
     metric: dict[str, str]
 
 
 class ScalarInstantVector(BaseVector):
-    value: ScalarPointData
+    value: PointData[str]
 
 
 class HistogramInstantVector(BaseVector):
-    histogram: HistogramPointData
+    histogram: PointData[HistogramValue]
 
 
 class ScalarRangeVector(BaseVector):
-    values: list[ScalarPointData]
+    values: list[PointData[str]]
 
 
 class HistogramRangeVector(BaseVector):
-    histograms: list[HistogramPointData]
+    histograms: list[PointData[HistogramValue]]
 
 
 class VectorData(TypedDict):
@@ -69,9 +65,9 @@ class MatrixData(TypedDict):
 
 class ScalarData(TypedDict):
     resultType: Literal["scalar"]
-    result: ScalarPointData
+    result: PointData[str]
 
 
 class StringData(TypedDict):
     resultType: Literal["string"]
-    result: StringPointData
+    result: PointData[str]

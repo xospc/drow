@@ -5,21 +5,15 @@ T = TypeVar("T")
 
 
 @dataclass(frozen=True)
-class ScalarPoint(Generic[T]):
+class Point(Generic[T]):
     timestamp: float
     value: T
 
 
 @dataclass(frozen=True)
-class StringPoint:
-    timestamp: float
-    value: str
-
-
-@dataclass(frozen=True)
 class InstantSeries(Generic[T]):
     metric: dict[str, str]
-    value: ScalarPoint[T]
+    value: Point[T]
 
 
 @dataclass(frozen=True)
@@ -30,7 +24,7 @@ class InstantVector(Generic[T]):
 @dataclass(frozen=True)
 class RangeSeries(Generic[T]):
     metric: dict[str, str]
-    values: list[ScalarPoint[T]]
+    values: list[Point[T]]
 
 
 @dataclass(frozen=True)
