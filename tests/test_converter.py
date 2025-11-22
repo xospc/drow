@@ -4,7 +4,6 @@ from unittest import TestCase
 from drow.annotation import SuccessResponse, VectorData
 from drow.model import InstantVector
 from drow.parser import make_parser
-from drow.converter import convert_to_decimal
 
 
 class TestConverter(TestCase):
@@ -23,7 +22,7 @@ class TestConverter(TestCase):
                 ],
             },
         }
-        parser = make_parser(convert_to_decimal)
+        parser = make_parser(Decimal)
         parsed = parser.parse_query_response(resp)
         assert isinstance(parsed, InstantVector)
         value = parsed.series[0].value.value
